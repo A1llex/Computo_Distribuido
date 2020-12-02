@@ -1,21 +1,36 @@
-import simpy
-from Canales import Canal
+"""
+======================================================================
+>> Autor: Johann Gordillo
+>> Email: jgordillo@ciencias.unam.mx
+>> Fecha: 01/12/2020
+======================================================================
+Universidad Nacional Autónoma de México
+Facultad de Ciencias
 
-class CanalRecorridos():
-    '''
-    Clase que modela un canal, permite enviar mensajes one-to-many.
-    '''
+Computación Distribuida [2021-1]
+
+Implementación del canal.
+======================================================================
+"""
+
+import simpy
+
+from Canales.Canal import Canal
+
+
+class CanalRecorridos(Canal):
+    """Implementación de un canal. Permite enviar mensajes
+    one-to-many."""
     def __init__(self, env, capacidad=simpy.core.Infinity):
         self.env = env
         self.capacidad = capacidad
-        self.canales = []
+        self.canales = list()
 
     def envia(self, mensaje, vecinos):
-        '''
-        Envia un mensaje a los canales de salida de los vecinos.
-        '''
+        """Envía un mensaje a los canales de salida de los
+        vecinos."""
         if not self.canales:
-            raise RuntimeError('No hay canales de salida.')
+            raise RuntimeError("No hay canales de salida.")
         eventos = list()
         for i in range(len(self.canales)):
             if i in vecinos:
@@ -23,9 +38,7 @@ class CanalRecorridos():
         return self.env.all_of(eventos)
 
     def crea_canal_de_entrada(self):
-        '''
-        Creamos un canal de entrada
-        '''
+        """Creamos un objeto Store en el que recibiremos mensajes."""
         canal_entrada = simpy.Store(self.env, capacity=self.capacidad)
         self.canales.append(canal_entrada)
         return canal_entrada

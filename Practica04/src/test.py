@@ -1,9 +1,28 @@
-from Canales.CanalRecorridos import *
-from NodoBroadcast import *
-from NodoDFS import *
+"""
+======================================================================
+>> Autores: Johann Gordillo [jgordillo@ciencias.unam.mx]
+            Alex Fernández  [alex@ciencias.unam.mx]
 
-class TestPractica4:
-    ''' Clase para las pruebas unitarias de la práctica 4. '''
+>> Fecha:   01/12/2020
+======================================================================
+Universidad Nacional Autónoma de México
+Facultad de Ciencias
+
+Computación Distribuida [2021-1]
+
+Tests para la práctica.
+======================================================================
+"""
+
+import simpy
+
+from Canales.CanalRecorridos import CanalRecorridos
+from NodoBroadcast import NodoBroadcast
+from NodoDFS import NodoDFS
+
+
+class TestPractica4(object):
+    """Clase para las pruebas unitarias de la práctica 4."""
     # Las aristas de adyacencias de la gráfica.
     adyacencias = [[1, 3, 4, 6], [0, 3, 5, 7], [3, 5, 6], [0, 1, 2], [0], [1, 2], [0, 2], [1]]
     adyacencias_arbol = [[1, 2], [3], [5], [4], [], []]
@@ -11,11 +30,9 @@ class TestPractica4:
     adyacencias_arbol_2 = [[1], [2], [3], []]
 
     def verifica_orden_ascendente(self, grafica, es_vectorial):
-        '''
-        Verificamos que el orden de los eventos de cada proceso tenga valores de reloj
+        """Verificamos que el orden de los eventos de cada proceso tenga valores de reloj
         ascendetes. Si la variable booleana es vectorial usaremos la comparacion de relojes
-        vectoriales.
-        '''
+        vectoriales."""
         for nodo in grafica:
             actual_reloj = [0]*8 if es_vectorial else 0 # Si algun reloj resulta menor a este valor está mal.
             for evento in nodo.eventos:
@@ -27,10 +44,8 @@ class TestPractica4:
         return True # Si no encontramos ningun reloj malo, entonces todo ta' bien.
 
     def verifica_pares_eventos(self, grafica, es_vectorial):
-        '''
-        Verificamos que para cada evento de envío exista un evento de recepción
-        que siga el orden causal.
-        '''
+        """Verificamos que para cada evento de envío exista un evento de recepción
+        que siga el orden causal."""
         # Usamos un diccionario para verificar los eventos que hemos visto.
         eventos_vistos = {}
         for nodo in grafica: # Iteramos cada evento...
@@ -68,10 +83,8 @@ class TestPractica4:
         return len(eventos_vistos.items()) == 0
 
     def compara_relojes(self, a, b):
-        '''
-        Dados dos relojes vectoriales a y b, regresamos True si a <= b.
-        '''
-        for i in range(0, len(a)):
+        """Dados dos relojes vectoriales a y b, regresamos True si a <= b."""
+        for i in range(len(a)):
             if a[i] <= b[i]:
                 continue
             else:
@@ -79,7 +92,7 @@ class TestPractica4:
         return True
 
     def test_ejercicio_uno(self):
-        ''' Método que prueba el algoritmo de Broadcast. '''
+        """Método que prueba el algoritmo de Broadcast."""
         # Creamos el ambiente y el objeto Canal
         env = simpy.Environment()
         bc_pipe = CanalRecorridos(env)
@@ -122,7 +135,7 @@ class TestPractica4:
             assert mensaje_enviado == nodo.mensaje
         for nodo in grafica1:
             assert mensaje_enviado_1 == nodo.mensaje
-        for nodo in grafica1:
+        for nodo in grafica2:
             assert mensaje_enviado_2 == nodo.mensaje
 
         # Verificamos que, por proceso, los valores de los relojes vayn en orden ascendente.
@@ -136,7 +149,7 @@ class TestPractica4:
         assert self.verifica_pares_eventos(grafica2, False)
 
     def test_ejercicio_dos(self):
-        ''' Prueba para el algoritmo DFS. '''
+        """Prueba para el algoritmo DFS."""
         # Creamos el ambiente y el objeto Canal
         env = simpy.Environment()
         bc_pipe = CanalRecorridos(env)
@@ -146,7 +159,7 @@ class TestPractica4:
 
         # Creamos los nodos
         for i in range(0, len(self.adyacencias)):
-            grafica.append(NodoDFS(i, self.adyacencias[i],
+            grafica.append(NodoDFS(i, set(self.adyacencias[i]),
                                    bc_pipe.crea_canal_de_entrada(), bc_pipe, 8))
 
         # Le decimos al ambiente lo que va a procesar ...
@@ -157,7 +170,7 @@ class TestPractica4:
 
         # Probamos que efectivamente se hizo un DFS.
         padres_esperados = [0, 0, 3, 1, 0, 2, 2, 1]
-        hijos_esperados = [[1, 4], [3, 7], [5, 6], [2], [], [], [], []]
+        hijos_esperados = [{1, 4}, {3, 7}, {5, 6}, {2}, set(), set(), set(), set()]
 
         # Para cada nodo verificamos que su lista de identifiers sea la esperada.
         for i in range(0, len(grafica)):
@@ -167,3 +180,14 @@ class TestPractica4:
 
         assert self.verifica_orden_ascendente(grafica, True)
         assert self.verifica_pares_eventos(grafica, True)
+
+
+if __name__ == "__main__":
+    tester = TestPractica4()
+    print("Probando el Ejercicio 1...")
+    tester.test_ejercicio_uno()
+
+    print()
+
+    print("Probando el Ejercicio 2...")
+    tester.test_ejercicio_dos()
